@@ -103,11 +103,11 @@ find . -name "MS_ACCEPTANCE*" -o -name "ACCEPTANCE_CRITERIA*" 2>/dev/null | grep
 *"The M&S developer shall define acceptance criteria for the M&S."*
 
 The standard requires acceptance criteria for **5 categories** (43a–e):
-- 43a: V&V completeness
-- 43b: Uncertainty characterization completeness
-- 43c: Sensitivity analysis completeness
-- 43d: Results assessment completeness
-- 43e: Minimum credibility thresholds (Appendix E scoring)
+- 43a: Criteria for Verification
+- 43b: Criteria for Validation
+- 43c: Criteria for Uncertainty
+- 43d: Criteria for Sensitivity
+- 43e: M&S assessment level thresholds (for the M&S capability assessment and M&S results assessment)
 
 ```bash
 find . \( -name "MS_ACCEPTANCE*" -o -name "ACCEPTANCE_CRITERIA*" \) -not -path "./.git/*" 2>/dev/null
@@ -115,7 +115,7 @@ grep -r "acceptance criteria\|acceptance threshold\|credibility threshold\|minim
   --include="*.md" -i -A 5 2>/dev/null | head -30
 ```
 
-**Compliant if:** All 5 categories (43a–e) have defined thresholds or criteria.
+**Compliant if:** All 5 categories (43a–e) have defined thresholds or criteria — specifically: Verification criteria (43a), Validation criteria (43b), Uncertainty criteria (43c), Sensitivity criteria (43d), and M&S assessment level thresholds (43e).
 
 ---
 

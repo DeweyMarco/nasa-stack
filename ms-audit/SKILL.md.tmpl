@@ -82,7 +82,7 @@ grep -r "metric\|milestone\|schedule\|budget\|performance measure" --include="*.
 find . -name "MS_ACCEPTANCE*" -o -name "ACCEPTANCE_CRITERIA*" 2>/dev/null | grep -v .git
 grep -r "acceptance criteria\|threshold\|pass.*fail\|credibility" --include="*.md" -i -l 2>/dev/null | head -5
 ```
-✓ if acceptance criteria for V&V, uncertainty, and sensitivity are defined. ✗ if absent.
+✓ if acceptance criteria for all 5 categories are defined (43a: Verification, 43b: Validation, 43c: Uncertainty, 43d: Sensitivity, 43e: M&S assessment level thresholds). ✗ if absent.
 
 **M&S 44 — M&S-Unique Reporting Info**
 ```bash

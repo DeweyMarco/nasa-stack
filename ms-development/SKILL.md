@@ -142,21 +142,24 @@ find . -path "*/data/*" -not -path "./.git/*" | head -20
 
 ---
 
-## Step 1: M&S 10 — RWS Data with Pedigree
+## Step 1: M&S 10 — RWS Characteristics and Data Pedigree
 
-*"The M&S developer shall record the characteristics of the RWS [Real World System] data, including data pedigree."*
+*"The M&S developer shall maintain a record of relevant characteristics, including data, of the RWS to be modeled, including its pedigree."*
+
+Note: M&S 10 is about characterizing the **Real World System (RWS) being modeled** — its relevant properties, behaviors, and the data describing it — along with the pedigree of that data. This is broader than just listing data files; it should capture what aspects of the RWS the M&S represents and how faithfully the characterization data reflects the actual system.
 
 ```bash
-# Check for data directory and provenance docs
-find . \( -name "DATA_MANIFEST*" -o -name "data_manifest*" -o -name "DATA_SOURCES*" \
+# Check for RWS characterization docs
+find . \( -name "RWS*" -o -name "REAL_WORLD*" -o -name "SYSTEM_DESCRIPTION*" \
+  -o -name "DATA_MANIFEST*" -o -name "data_manifest*" -o -name "DATA_SOURCES*" \
   -o -name "DATA_PROVENANCE*" \) -not -path "./.git/*" 2>/dev/null
 find . -path "*/data/*" -name "*.md" -not -path "./.git/*" 2>/dev/null
-# Check for data source references in code
-grep -r "data.*source\|data.*origin\|provenance\|pedigree\|obtained from" \
+# Check for RWS/data characterization in code or docs
+grep -r "real.*world\|RWS\|system.*characteristic\|data.*source\|data.*origin\|provenance\|pedigree\|obtained from" \
   --include="*.py" --include="*.md" -i -l 2>/dev/null | head -10
 ```
 
-**Compliant if:** A `data/` directory has a manifest or README documenting each dataset's source, date, version, and uncertainty.
+**Compliant if:** Documentation exists describing the relevant characteristics of the real-world system being modeled AND the pedigree of data used to characterize it (source, date, version, uncertainty). A data manifest alone is partial if it doesn't address what RWS properties it characterizes.
 
 ---
 
@@ -330,16 +333,20 @@ grep -r "domain of validation\|validation domain\|validated for\|valid.*for.*ran
 
 ---
 
-## Step 12: M&S 19 — Uncertainty in Referent Data Characterized
+## Step 12: M&S 19 — Uncertainty Characterization Process for Referent Data Recorded
 
-*"The M&S developer shall characterize uncertainty in referent data used for validation."*
+*"The M&S developer shall maintain a record of the processes and rationale for characterizing uncertainty in the referent data."*
+
+The requirement is to document **how and why** uncertainty in the referent data was characterized — not just that it was done. Look for process documentation, not just uncertainty values.
 
 ```bash
 grep -r "referent.*uncertainty\|measurement.*uncertainty\|experimental.*uncertainty\|data.*error\|sensor.*error" \
   --include="*.md" --include="*.py" -i -l 2>/dev/null | head -5
+grep -r "uncertainty.*process\|uncertainty.*method\|uncertainty.*rationale\|how.*uncertainty.*was\|approach.*to.*uncertainty" \
+  --include="*.md" -i -l 2>/dev/null | head -5
 ```
 
-**Compliant if:** Validation report includes estimates of uncertainty in the referent data (measurement error, instrument precision, etc.).
+**Compliant if:** A document describes the process and rationale used to characterize referent data uncertainty (e.g., "measurement uncertainty was estimated using instrument spec sheets; ±2σ bounds applied"). Values alone without process description are ⚠ partial.
 
 ---
 
@@ -361,17 +368,34 @@ grep -r "import uncertainties\|from uncertainties\|import chaospy\|import opentu
 
 ## Step 14: M&S 47 — Usage Guidance Maintained
 
-*"The M&S developer shall maintain usage guidance for the M&S."*
+*"The M&S developer shall maintain guidance on how to use the M&S."*
+
+The standard (§4.2.1.9) requires usage guidance to cover all of the following:
+- **a. Appropriate practices for:** (1) Setup, (2) Execution, (3) Interfaces with other models when used in a linked or coupled model, (4) Analysis of results
+- **b. Obsolescence criteria** — conditions under which changes to the real system invalidate the M&S
+- **c. Parameter calibrations**
+- **d. Computational requirements** (hardware/software versions, memory, disk, processor, compilation options)
 
 ```bash
 ls README.md README.rst docs/index* docs/usage* docs/getting_started* 2>/dev/null
 grep -r "setup\|installation\|how.*to.*run\|getting.*started\|usage\|running.*the\|execute" \
   --include="README*" --include="*.md" -i -l 2>/dev/null | head -5
+grep -r "obsolescen\|coupled.*model\|linked.*model\|calibration\|computational.*requirement\|hardware.*requirement\|software.*requirement" \
+  --include="README*" --include="*.md" -i -l 2>/dev/null | head -5
 ```
 
-If README exists, read it and check whether it covers: (1) setup/installation, (2) how to execute the M&S, (3) how to interpret outputs/results.
+If README or usage docs exist, read them and check whether they cover all required items:
+1. Setup practices
+2. Execution practices
+3. Interfaces with other linked/coupled models
+4. Analysis of results
+5. Obsolescence criteria
+6. Parameter calibrations
+7. Computational requirements
 
-**Compliant if:** All three aspects are covered.
+**Compliant if:** All 7 aspects are addressed (even briefly).
+**Partial if:** Setup/execution are covered but interfaces, obsolescence, calibrations, or computational requirements are missing.
+**Non-compliant if:** No usage guidance exists at all.
 
 ---
 
@@ -406,7 +430,7 @@ Output:
 
 | Req    | Requirement                            | Status | Evidence |
 |--------|----------------------------------------|--------|----------|
-| M&S 10 | RWS data with pedigree                 | ✓/✗/⚠ | [location] |
+| M&S 10 | RWS characteristics and data pedigree  | ✓/✗/⚠ | [location] |
 | M&S 45 | Data sets and software maintained      | ✓/✗/⚠ | [location] |
 | M&S 46 | Units and coordinate frames            | ✓/✗/⚠ | [location] |
 | M&S 11 | Assumptions and abstractions           | ✓/✗/⚠ | [location] |
