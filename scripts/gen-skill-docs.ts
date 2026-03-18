@@ -1142,19 +1142,14 @@ function findTemplates(): string[] {
   const candidates = [
     path.join(ROOT, 'SKILL.md.tmpl'),
     path.join(ROOT, 'browse', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'qa', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'qa-only', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'setup-browser-cookies', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'ship', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'review', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'plan-ceo-review', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'plan-eng-review', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'retro', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'gstack-upgrade', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'plan-design-review', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'qa-design-review', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'design-consultation', 'SKILL.md.tmpl'),
-    path.join(ROOT, 'document-release', 'SKILL.md.tmpl'),
+    // NASA-STD-7009B compliance skills
+    path.join(ROOT, 'ms-audit', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-programmatics', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-development', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-use', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-reporting', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-credibility', 'SKILL.md.tmpl'),
+    path.join(ROOT, 'ms-criticality', 'SKILL.md.tmpl'),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) templates.push(p);

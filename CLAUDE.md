@@ -1,4 +1,6 @@
-# gstack development
+# NASA M&S Compliance Skills Development
+
+This repository implements a NASA-STD-7009B ("Standard for Models and Simulations", March 2024) compliance skills package for Python M&S projects. It is built on the gstack infrastructure (browse binary, gen-skill-docs pipeline, SKILL.md.tmpl system).
 
 ## Commands
 
@@ -33,49 +35,73 @@ variants to force all tests. Run `eval:select` to preview which tests would run.
 ## Project structure
 
 ```
-gstack/
-├── browse/          # Headless browser CLI (Playwright)
-│   ├── src/         # CLI + server + commands
-│   │   ├── commands.ts  # Command registry (single source of truth)
-│   │   └── snapshot.ts  # SNAPSHOT_FLAGS metadata array
-│   ├── test/        # Integration tests + fixtures
-│   └── dist/        # Compiled binary
-├── scripts/         # Build + DX tooling
-│   ├── gen-skill-docs.ts  # Template → SKILL.md generator
-│   ├── skill-check.ts     # Health dashboard
-│   └── dev-skill.ts       # Watch mode
-├── test/            # Skill validation + eval tests
-│   ├── helpers/     # skill-parser.ts, session-runner.ts, llm-judge.ts, eval-store.ts
-│   ├── fixtures/    # Ground truth JSON, planted-bug fixtures, eval baselines
-│   ├── skill-validation.test.ts  # Tier 1: static validation (free, <1s)
-│   ├── gen-skill-docs.test.ts    # Tier 1: generator quality (free, <1s)
-│   ├── skill-llm-eval.test.ts   # Tier 3: LLM-as-judge (~$0.15/run)
-│   └── skill-e2e.test.ts         # Tier 2: E2E via claude -p (~$3.85/run)
-├── qa-only/         # /qa-only skill (report-only QA, no fixes)
-├── plan-design-review/  # /plan-design-review skill (report-only design audit)
-├── qa-design-review/    # /qa-design-review skill (design audit + fix loop)
-├── ship/            # Ship workflow skill
-├── review/          # PR review skill
-├── plan-ceo-review/ # /plan-ceo-review skill
-├── plan-eng-review/ # /plan-eng-review skill
-├── retro/           # Retrospective skill
-├── document-release/ # /document-release skill (post-ship doc updates)
-├── setup            # One-time setup: build binary + symlink skills
-├── SKILL.md         # Generated from SKILL.md.tmpl (don't edit directly)
-├── SKILL.md.tmpl    # Template: edit this, run gen:skill-docs
-└── package.json     # Build scripts for browse
+nasa-stack/
+├── ms-audit/            # /ms-audit skill — master compliance audit (all 43 requirements)
+│   ├── SKILL.md.tmpl
+│   └── SKILL.md
+├── ms-programmatics/    # /ms-programmatics skill — Section 4.1 (8 requirements)
+│   ├── SKILL.md.tmpl
+│   ├── templates/       # MS_INTENDED_USE.md, MS_CRITICALITY_ASSESSMENT.md, etc.
+│   └── SKILL.md
+├── ms-development/      # /ms-development skill — Section 4.2 (15 requirements)
+│   ├── SKILL.md.tmpl
+│   ├── templates/       # ASSUMPTIONS.md, MS_LIMITS.md, VALIDATION_REPORT.md, etc.
+│   └── SKILL.md
+├── ms-use/              # /ms-use skill — Section 4.3 (11 requirements)
+│   ├── SKILL.md.tmpl
+│   ├── templates/       # MS_USE_RECORD.md, SENSITIVITY_ANALYSIS.md, etc.
+│   └── SKILL.md
+├── ms-reporting/        # /ms-reporting skill — Section 4.3.8 (9 requirements)
+│   ├── SKILL.md.tmpl
+│   ├── templates/       # MS_RESULTS_REPORT.md
+│   └── SKILL.md
+├── ms-credibility/      # /ms-credibility skill — Appendix E (11 factors)
+│   ├── SKILL.md.tmpl
+│   ├── templates/       # MS_CREDIBILITY_ASSESSMENT.md
+│   └── SKILL.md
+├── ms-criticality/      # /ms-criticality skill — Appendix D (3x3 matrix)
+│   ├── SKILL.md.tmpl
+│   └── SKILL.md
+├── browse/              # Headless browser CLI (Playwright) — kept as-is
+│   ├── src/             # CLI + server + commands
+│   │   ├── commands.ts  # Command registry
+│   │   └── snapshot.ts  # SNAPSHOT_FLAGS metadata
+│   ├── test/
+│   └── dist/
+├── scripts/             # Build + DX tooling
+│   ├── gen-skill-docs.ts  # Template → SKILL.md generator (updated for new skills)
+│   ├── skill-check.ts
+│   └── dev-skill.ts
+├── test/                # Skill validation + eval tests
+│   ├── helpers/         # session-runner, llm-judge, eval-store, touchfiles.ts
+│   ├── fixtures/
+│   ├── skill-validation.test.ts
+│   └── skill-e2e.test.ts
+├── SKILL.md.tmpl        # Root: NASA M&S package description
+├── SKILL.md             # Generated
+├── CLAUDE.md            # This file
+└── package.json
 ```
+
+## Skills overview
+
+| Skill | Standard section | Requirements |
+|-------|-----------------|-------------|
+| `/ms-audit` | All | All 43 (entry point) |
+| `/ms-programmatics` | Section 4.1 | M&S 40, 6, 41, 42, 43, 44, 9, 51 |
+| `/ms-development` | Section 4.2 | M&S 10, 11–19, 21, 45–48 |
+| `/ms-use` | Section 4.3 | M&S 22–31, 49 |
+| `/ms-reporting` | Section 4.3.8 | M&S 32–39, 50 |
+| `/ms-credibility` | Appendix E | 11 credibility factors |
+| `/ms-criticality` | Appendix D | 3×3 criticality matrix |
 
 ## SKILL.md workflow
 
 SKILL.md files are **generated** from `.tmpl` templates. To update docs:
 
-1. Edit the `.tmpl` file (e.g. `SKILL.md.tmpl` or `browse/SKILL.md.tmpl`)
+1. Edit the `.tmpl` file (e.g. `ms-audit/SKILL.md.tmpl`)
 2. Run `bun run gen:skill-docs` (or `bun run build` which does it automatically)
 3. Commit both the `.tmpl` and generated `.md` files
-
-To add a new browse command: add it to `browse/src/commands.ts` and rebuild.
-To add a snapshot flag: add it to `SNAPSHOT_FLAGS` in `browse/src/snapshot.ts` and rebuild.
 
 ## Writing SKILL templates
 
@@ -85,95 +111,41 @@ Each bash code block runs in a separate shell — variables do not persist betwe
 Rules:
 - **Use natural language for logic and state.** Don't use shell variables to pass
   state between code blocks. Instead, tell Claude what to remember and reference
-  it in prose (e.g., "the base branch detected in Step 0").
-- **Don't hardcode branch names.** Detect `main`/`master`/etc dynamically via
-  `gh pr view` or `gh repo view`. Use `{{BASE_BRANCH_DETECT}}` for PR-targeting
-  skills. Use "the base branch" in prose, `<base>` in code block placeholders.
+  it in prose.
 - **Keep bash blocks self-contained.** Each code block should work independently.
   If a block needs context from a previous step, restate it in the prose above.
 - **Express conditionals as English.** Instead of nested `if/elif/else` in bash,
   write numbered decision steps: "1. If X, do Y. 2. Otherwise, do Z."
+- **Python-specific scanning:** Skills scan `.py` files for compliance evidence
+  (docstrings, unit annotations, logging calls, test files, bounds checks).
+
+## Artifact templates
+
+Each skill's `templates/` directory contains pre-structured markdown templates for
+the compliance artifacts that skill generates. When a skill finds a missing artifact,
+it should read the corresponding template, adapt placeholders to the project's actual
+content, and write it to `docs/` in the target project.
+
+## NASA-STD-7009B quick reference
+
+**43 "shall" requirements across 4 phases:**
+- Programmatics (4.1): M&S 40, 6, 41, 42, 43, 44, 9, 51
+- Development (4.2): M&S 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 45, 46, 47, 48
+- Use (4.3): M&S 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 49
+- Reporting (4.3.8): M&S 32, 33, 34, 35, 36, 37, 38, 39, 50
+
+**Appendix D:** Criticality Matrix (Decision Consequence × M&S Influence → Low/Medium/High/Safety-Critical)
+**Appendix E:** Credibility Assessment (11 factors, 0–4 scale each)
 
 ## Browser interaction
 
-When you need to interact with a browser (QA, dogfooding, cookie setup), use the
-`/browse` skill or run the browse binary directly via `$B <command>`. NEVER use
-`mcp__claude-in-chrome__*` tools — they are slow, unreliable, and not what this
-project uses.
-
-## Vendored symlink awareness
-
-When developing gstack, `.claude/skills/gstack` may be a symlink back to this
-working directory (gitignored). This means skill changes are **live immediately** —
-great for rapid iteration, risky during big refactors where half-written skills
-could break other Claude Code sessions using gstack concurrently.
-
-**Check once per session:** Run `ls -la .claude/skills/gstack` to see if it's a
-symlink or a real copy. If it's a symlink to your working directory, be aware that:
-- Template changes + `bun run gen:skill-docs` immediately affect all gstack invocations
-- Breaking changes to SKILL.md.tmpl files can break concurrent gstack sessions
-- During large refactors, remove the symlink (`rm .claude/skills/gstack`) so the
-  global install at `~/.claude/skills/gstack/` is used instead
-
-**For plan reviews:** When reviewing plans that modify skill templates or the
-gen-skill-docs pipeline, consider whether the changes should be tested in isolation
-before going live (especially if the user is actively using gstack in other windows).
-
-## CHANGELOG style
-
-CHANGELOG.md is **for users**, not contributors. Write it like product release notes:
-
-- Lead with what the user can now **do** that they couldn't before. Sell the feature.
-- Use plain language, not implementation details. "You can now..." not "Refactored the..."
-- Put contributor/internal changes in a separate "For contributors" section at the bottom.
-- Every entry should make someone think "oh nice, I want to try that."
-- No jargon: say "every question now tells you which project and branch you're in" not
-  "AskUserQuestion format standardized across skill templates via preamble resolver."
-
-## AI effort compression
-
-When estimating or discussing effort, always show both human-team and CC+gstack time:
-
-| Task type | Human team | CC+gstack | Compression |
-|-----------|-----------|-----------|-------------|
-| Boilerplate / scaffolding | 2 days | 15 min | ~100x |
-| Test writing | 1 day | 15 min | ~50x |
-| Feature implementation | 1 week | 30 min | ~30x |
-| Bug fix + regression test | 4 hours | 15 min | ~20x |
-| Architecture / design | 2 days | 4 hours | ~5x |
-| Research / exploration | 1 day | 3 hours | ~3x |
-
-Completeness is cheap. Don't recommend shortcuts when the complete implementation
-is a "lake" (achievable) not an "ocean" (multi-quarter migration). See the
-Completeness Principle in the skill preamble for the full philosophy.
-
-## Local plans
-
-Contributors can store long-range vision docs and design documents in `~/.gstack-dev/plans/`.
-These are local-only (not checked in). When reviewing TODOS.md, check `plans/` for candidates
-that may be ready to promote to TODOs or implement.
-
-## E2E eval failure blame protocol
-
-When an E2E eval fails during `/ship` or any other workflow, **never claim "not
-related to our changes" without proving it.** These systems have invisible couplings —
-a preamble text change affects agent behavior, a new helper changes timing, a
-regenerated SKILL.md shifts prompt context.
-
-**Required before attributing a failure to "pre-existing":**
-1. Run the same eval on main (or base branch) and show it fails there too
-2. If it passes on main but fails on the branch — it IS your change. Trace the blame.
-3. If you can't run on main, say "unverified — may or may not be related" and flag it
-   as a risk in the PR body
-
-"Pre-existing" without receipts is a lazy claim. Prove it or don't say it.
+When you need to interact with a browser, use the `/browse` skill or run the browse
+binary directly via `$B <command>`. NEVER use `mcp__claude-in-chrome__*` tools.
 
 ## Deploying to the active skill
 
-The active skill lives at `~/.claude/skills/gstack/`. After making changes:
+The active skill lives at `~/.claude/skills/nasa-stack/`. After making changes:
 
 1. Push your branch
-2. Fetch and reset in the skill directory: `cd ~/.claude/skills/gstack && git fetch origin && git reset --hard origin/main`
-3. Rebuild: `cd ~/.claude/skills/gstack && bun run build`
-
-Or copy the binary directly: `cp browse/dist/browse ~/.claude/skills/gstack/browse/dist/browse`
+2. Fetch and reset: `cd ~/.claude/skills/nasa-stack && git fetch origin && git reset --hard origin/main`
+3. Rebuild: `cd ~/.claude/skills/nasa-stack && bun run build`

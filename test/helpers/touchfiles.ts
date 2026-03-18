@@ -43,65 +43,36 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   'contributor-mode':         ['SKILL.md', 'SKILL.md.tmpl'],
   'session-awareness':        ['SKILL.md', 'SKILL.md.tmpl'],
 
-  // QA
-  'qa-quick':       ['qa/**', 'browse/src/**'],
-  'qa-b6-static':   ['qa/**', 'browse/src/**', 'browse/test/fixtures/qa-eval.html', 'test/fixtures/qa-eval-ground-truth.json'],
-  'qa-b7-spa':      ['qa/**', 'browse/src/**', 'browse/test/fixtures/qa-eval-spa.html', 'test/fixtures/qa-eval-spa-ground-truth.json'],
-  'qa-b8-checkout': ['qa/**', 'browse/src/**', 'browse/test/fixtures/qa-eval-checkout.html', 'test/fixtures/qa-eval-checkout-ground-truth.json'],
-  'qa-only-no-fix': ['qa-only/**', 'qa/templates/**'],
-  'qa-fix-loop':    ['qa/**', 'browse/src/**'],
-
-  // Review
-  'review-sql-injection':     ['review/**', 'test/fixtures/review-eval-vuln.rb'],
-  'review-enum-completeness': ['review/**', 'test/fixtures/review-eval-enum*.rb'],
-  'review-base-branch':       ['review/**'],
-  'review-design-lite':       ['review/**', 'test/fixtures/review-eval-design-slop.*'],
-
-  // Plan reviews
-  'plan-ceo-review':           ['plan-ceo-review/**'],
-  'plan-ceo-review-selective': ['plan-ceo-review/**'],
-  'plan-eng-review':           ['plan-eng-review/**'],
-  'plan-eng-review-artifact':  ['plan-eng-review/**'],
-
-  // Ship
-  'ship-base-branch': ['ship/**'],
-
-  // Retro
-  'retro':             ['retro/**'],
-  'retro-base-branch': ['retro/**'],
-
-  // Document-release
-  'document-release': ['document-release/**'],
-
-  // QA bootstrap
-  'qa-bootstrap': ['qa/**', 'browse/src/**', 'ship/**'],
-
-  // Ship coverage audit
-  'ship-coverage-audit': ['ship/**'],
-
-  // Design
-  'design-consultation-core':     ['design-consultation/**'],
-  'design-consultation-research': ['design-consultation/**'],
-  'design-consultation-existing': ['design-consultation/**'],
-  'design-consultation-preview':  ['design-consultation/**'],
-  'plan-design-review-audit':     ['plan-design-review/**'],
-  'plan-design-review-export':    ['plan-design-review/**'],
-  'qa-design-review-fix':         ['qa-design-review/**', 'browse/src/**'],
+  // NASA M&S compliance skills
+  'ms-audit-full':              ['ms-audit/**'],
+  'ms-audit-matrix':            ['ms-audit/**'],
+  'ms-programmatics-check':     ['ms-programmatics/**'],
+  'ms-programmatics-artifacts': ['ms-programmatics/**'],
+  'ms-development-check':       ['ms-development/**'],
+  'ms-development-units':       ['ms-development/**'],
+  'ms-development-vv':          ['ms-development/**'],
+  'ms-use-check':               ['ms-use/**'],
+  'ms-use-uncertainty':         ['ms-use/**'],
+  'ms-reporting-check':         ['ms-reporting/**'],
+  'ms-reporting-template':      ['ms-reporting/**'],
+  'ms-credibility-scoring':     ['ms-credibility/**'],
+  'ms-criticality-matrix':      ['ms-criticality/**'],
 };
 
 /**
  * LLM-judge test touchfiles — keyed by test description string.
  */
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
-  'command reference table':          ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/commands.ts'],
-  'snapshot flags reference':         ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/snapshot.ts'],
-  'browse/SKILL.md reference':        ['browse/SKILL.md', 'browse/SKILL.md.tmpl', 'browse/src/**'],
-  'setup block':                      ['SKILL.md', 'SKILL.md.tmpl'],
-  'regression vs baseline':           ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/commands.ts', 'test/fixtures/eval-baselines.json'],
-  'qa/SKILL.md workflow':             ['qa/SKILL.md', 'qa/SKILL.md.tmpl'],
-  'qa/SKILL.md health rubric':        ['qa/SKILL.md', 'qa/SKILL.md.tmpl'],
-  'cross-skill greptile consistency': ['review/SKILL.md', 'review/SKILL.md.tmpl', 'ship/SKILL.md', 'ship/SKILL.md.tmpl', 'review/greptile-triage.md', 'retro/SKILL.md', 'retro/SKILL.md.tmpl'],
-  'baseline score pinning':           ['SKILL.md', 'SKILL.md.tmpl', 'test/fixtures/eval-baselines.json'],
+  'command reference table':            ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/commands.ts'],
+  'snapshot flags reference':           ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/snapshot.ts'],
+  'browse/SKILL.md reference':          ['browse/SKILL.md', 'browse/SKILL.md.tmpl', 'browse/src/**'],
+  'setup block':                        ['SKILL.md', 'SKILL.md.tmpl'],
+  'regression vs baseline':             ['SKILL.md', 'SKILL.md.tmpl', 'browse/src/commands.ts', 'test/fixtures/eval-baselines.json'],
+  'ms-audit requirement coverage':      ['ms-audit/SKILL.md', 'ms-audit/SKILL.md.tmpl'],
+  'ms-development python scanning':     ['ms-development/SKILL.md', 'ms-development/SKILL.md.tmpl'],
+  'ms-credibility factor descriptions': ['ms-credibility/SKILL.md', 'ms-credibility/SKILL.md.tmpl'],
+  'ms-criticality matrix logic':        ['ms-criticality/SKILL.md', 'ms-criticality/SKILL.md.tmpl'],
+  'baseline score pinning':             ['SKILL.md', 'SKILL.md.tmpl', 'test/fixtures/eval-baselines.json'],
 };
 
 /**

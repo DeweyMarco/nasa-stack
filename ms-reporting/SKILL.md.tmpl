@@ -1,0 +1,214 @@
+---
+name: ms-reporting
+version: 1.0.0
+description: |
+  NASA-STD-7009B Section 4.3.8 compliance check — 9 Reporting requirements. Checks
+  that results reports include all required warnings, uncertainty estimates, capability
+  and results assessments, qualifications, and Appendix A records. Generates a complete
+  report template pre-filled with project-specific information.
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - AskUserQuestion
+---
+
+{{PREAMBLE}}
+
+# /ms-reporting: Section 4.3.8 Results Reporting Compliance
+
+You are checking NASA-STD-7009B **Section 4.3.8 — M&S Results Reporting** requirements for this Python M&S project. There are **9 "shall" requirements** (M&S 32–39, 50). Every report that communicates M&S results to support a decision must satisfy all 9.
+
+---
+
+## Step 0: Find Existing Reports
+
+```bash
+# Look for results reports
+find . \( -name "*report*" -o -name "*REPORT*" -o -name "MS_RESULTS*" -o -name "results_*" \) \
+  -not -path "./.git/*" \
+  \( -name "*.md" -o -name "*.pdf" -o -name "*.docx" -o -name "*.txt" -o -name "*.rst" \) 2>/dev/null
+# Notebooks that may serve as reports
+find . -name "*.ipynb" -not -path "./.git/*" 2>/dev/null | head -10
+# Documentation folder
+ls docs/ 2>/dev/null
+```
+
+If no reports exist: all 9 requirements are ✗ by default. Skip to Step 10 to generate the template.
+
+If reports exist: read each one and check it against the 9 requirements below.
+
+---
+
+## Step 1: M&S 32 — Explicit Warnings for All 8 Violation Categories
+
+*"The results report shall include explicit warnings for violations of any of the following:"*
+
+The standard requires explicit warnings (not just omission) for all **8 categories**:
+
+1. Unachieved acceptance criteria (M&S 43 thresholds not met)
+2. Assumption violations (model used outside its stated assumptions)
+3. Limit violations (inputs or conditions outside M&S 13 limits)
+4. Error/warning messages generated during the run
+5. Unfavorable use appropriateness assessment (M&S 23 found issues)
+6. Setup or execution issues (unexpected behavior, convergence problems)
+7. Waivers or deviations from the M&S plan
+8. Outstanding defects or known problems (M&S 51)
+
+For each report found, check whether these 8 categories are addressed:
+
+```bash
+grep -r "warning\|violation\|limit.*exceeded\|outside.*domain\|assumption.*violated\|error.*message\|waiver\|known.*issue\|defect" \
+  --include="*.md" --include="*.txt" -i -l 2>/dev/null | head -10
+```
+
+**Compliant if:** The report has a "Warnings" or "Caveats" section that explicitly addresses all 8 categories (even if the entry is "None observed").
+
+---
+
+## Step 2: M&S 33 — Uncertainty Estimate
+
+*"The results report shall include an uncertainty estimate for the M&S results, or an explicit statement that an uncertainty estimate is not available."*
+
+```bash
+grep -r "uncertainty.*estimate\|uncertainty.*quantif\|confidence interval\|error bound\|±\|not available\|could not.*quantif" \
+  --include="*.md" --include="*.txt" --include="*.ipynb" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report contains a numeric uncertainty estimate (e.g., "±5% at 95% confidence") OR an explicit statement that quantitative uncertainty is not available with the reason why.
+**Non-compliant if:** Results are reported without any uncertainty statement.
+
+---
+
+## Step 3: M&S 34 — Uncertainty Process Description
+
+*"The results report shall describe the uncertainty characterization process."*
+
+```bash
+grep -r "uncertainty.*method\|Monte Carlo\|uncertainty.*approach\|how.*uncertainty.*was\|propagation.*method" \
+  --include="*.md" --include="*.txt" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report briefly describes HOW the uncertainty was estimated (Monte Carlo, analytical propagation, expert elicitation, etc.).
+
+---
+
+## Step 4: M&S 50 — M&S Capability Assessment Outcome Included
+
+*"The results report shall include the outcome of the M&S capability assessment."*
+
+```bash
+find . \( -name "MS_CAPABILITY*" -o -name "CAPABILITY_ASSESSMENT*" \) \
+  -not -path "./.git/*" 2>/dev/null
+grep -r "capability.*assessment\|developer.*factor\|data pedigree.*score\|verification.*score\|validation.*score" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report includes (or references) the 5-factor capability assessment scores from Appendix E. Run `/ms-credibility` to generate these scores.
+
+---
+
+## Step 5: M&S 35 — M&S Results Assessment Outcome
+
+*"The results report shall include the outcome of the M&S results assessment."*
+
+```bash
+find . \( -name "MS_RESULTS_ASSESSMENT*" -o -name "RESULTS_ASSESSMENT*" \) \
+  -not -path "./.git/*" 2>/dev/null
+grep -r "results.*assessment\|use.*assessment.*score\|appendix.*E.*results\|6.*factor" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report includes (or references) the 6-factor results assessment scores from Appendix E.
+
+---
+
+## Step 6: M&S 36 — Technical Review Findings
+
+*"The results report shall include the technical review findings."*
+
+```bash
+find . \( -name "*review*" -o -name "*REVIEW*" \) -not -path "./.git/*" -name "*.md" 2>/dev/null | head -5
+grep -r "technical review\|peer review\|reviewer.*finding\|review.*comment\|review.*disposition" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report documents who reviewed it, when, what they found, and how findings were dispositioned (accepted, waived, corrected).
+
+---
+
+## Step 7: M&S 37 — Developer and Operator Qualifications
+
+*"The results report shall include the qualifications of the M&S developer and operator."*
+
+```bash
+grep -r "qualification\|credentials\|experience\|expertise\|trained\|certified\|background" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report includes a section listing the relevant qualifications (education, experience, training) of both the M&S developer and the operator who ran the M&S for this specific use.
+
+---
+
+## Step 8: M&S 38 — Full Records per Appendix A
+
+*"The results report shall include full records per Appendix A."*
+
+Appendix A of NASA-STD-7009B defines the minimum records for the Requirements Identification Matrix. The report must reference or include these records.
+
+```bash
+grep -r "appendix.*A\|requirements identification matrix\|RIM\|full.*record" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report references a completed Requirements Identification Matrix or includes all Appendix A records as attachments.
+
+---
+
+## Step 9: M&S 39 — Risk Assessment Rationale
+
+*"The results report shall include the risk assessment rationale for M&S use."*
+
+```bash
+find . \( -name "MS_RISK*" -o -name "RISK_ASSESSMENT*" \) -not -path "./.git/*" 2>/dev/null
+grep -r "risk.*rationale\|risk.*assessment\|risk.*accept\|risk.*mitig" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** The report references or includes the risk assessment (M&S 49), explaining why the level of M&S credibility achieved is acceptable for the decision being made.
+
+---
+
+## Step 10: Report and Generate the Results Report Template
+
+### Compliance Summary
+
+```
+## Section 4.3.8 — Reporting Compliance
+
+| Req    | Requirement                                | Status | Evidence |
+|--------|--------------------------------------------|--------|----------|
+| M&S 32 | Explicit warnings (all 8 categories)       | ✓/✗/⚠ | [location] |
+| M&S 33 | Uncertainty estimate (or unavailability)   | ✓/✗/⚠ | [location] |
+| M&S 34 | Uncertainty process described              | ✓/✗/⚠ | [location] |
+| M&S 50 | Capability assessment outcome included     | ✓/✗/⚠ | [location] |
+| M&S 35 | Results assessment outcome included        | ✓/✗/⚠ | [location] |
+| M&S 36 | Technical review findings included         | ✓/✗/⚠ | [location] |
+| M&S 37 | Developer/operator qualifications          | ✓/✗/⚠ | [location] |
+| M&S 38 | Full records per Appendix A               | ✓/✗/⚠ | [location] |
+| M&S 39 | Risk assessment rationale                  | ✓/✗/⚠ | [location] |
+
+Score: X/9 (Y%)
+```
+
+### Generate the Results Report Template
+
+Use AskUserQuestion:
+- If no report exists: RECOMMENDATION: Generate the template now — it contains all 9 required sections pre-structured
+- If a partial report exists: RECOMMENDATION: Generate the template and use it to identify gaps in the existing report
+- Options: A) Generate `docs/MS_RESULTS_REPORT.md`  B) Show what's missing but don't create file
+
+When generating, read all detected artifacts (capability assessment, results assessment, risk assessment, use record) to pre-fill as much information as possible.

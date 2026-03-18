@@ -1,0 +1,271 @@
+---
+name: ms-credibility
+version: 1.0.0
+description: |
+  NASA-STD-7009B Appendix E credibility scoring. Interactively walks through all 11
+  factors (5 capability + 6 results) on a 0–4 scale. Produces a scored assessment
+  table with gap analysis vs. acceptance thresholds. Generates MS_CREDIBILITY_ASSESSMENT.md.
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - AskUserQuestion
+---
+
+{{PREAMBLE}}
+
+# /ms-credibility: Appendix E Credibility Scoring
+
+You are running the NASA-STD-7009B **Appendix E Credibility Assessment** for this Python M&S project. This assessment scores 11 factors across two dimensions — Capability Assessment (developer perspective) and Results Assessment (user perspective) — on a 0–4 scale.
+
+The result tells reviewers how much to trust both the M&S itself and a specific use of it.
+
+---
+
+## Step 0: Read Existing Evidence
+
+Before asking any questions, survey the project for evidence:
+
+```bash
+find . -name "*.md" -not -path "./.git/*" | sort
+find . \( -name "test_*.py" -o -name "*_test.py" \) -not -path "./.git/*" | wc -l
+find . -path "*/data/*" -not -path "./.git/*" | head -10
+find . \( -name "VALIDATION*" -o -name "ASSUMPTIONS*" -o -name "MS_LIMITS*" \) \
+  -not -path "./.git/*" 2>/dev/null
+ls CHANGELOG.md 2>/dev/null
+```
+
+Use this evidence to inform your scoring questions and to auto-score factors where evidence is conclusive.
+
+---
+
+## Step 1: Check for Existing Assessment
+
+```bash
+find . \( -name "MS_CREDIBILITY*" -o -name "CREDIBILITY_ASSESSMENT*" \) \
+  -not -path "./.git/*" 2>/dev/null
+```
+
+If a credibility assessment exists: read it, display the current scores, and ask:
+
+Use AskUserQuestion:
+- "A credibility assessment already exists. What would you like to do?"
+- Options: A) Update scores for specific factors  B) Re-score all factors from scratch  C) Just display the current assessment
+
+---
+
+## Step 2: Read Acceptance Thresholds
+
+```bash
+grep -r "acceptance.*threshold\|credibility.*threshold\|minimum.*score\|M&S 43e" \
+  --include="*.md" -i -A 10 2>/dev/null | head -30
+```
+
+If thresholds are defined in `docs/MS_ACCEPTANCE_CRITERIA.md` or similar, load them now. These are the target scores the project must meet. If not defined, note this as a gap (M&S 43e non-compliance).
+
+---
+
+## Step 3: Score Capability Assessment Factors (1–5)
+
+Score each factor 0–4. For each factor, first look for evidence in the project, then ask the user to confirm or adjust.
+
+### Scale Reference (applies to all factors):
+- **0 — Not performed:** No evidence this activity was done
+- **1 — Informally performed:** Done but not documented or inconsistently applied
+- **2 — Planned and tracked:** Documented, planned, some gaps remain
+- **3 — Well-defined:** Complete, documented, consistently applied
+- **4 — Quantitatively controlled:** Measured, metrics-driven, fully rigorous
+
+---
+
+**Factor 1: Data Pedigree**
+Evidence from M&S 10: Does a data manifest exist? Are data sources documented with version and uncertainty?
+
+Use AskUserQuestion:
+- "Factor 1: Data Pedigree — How well documented are the real-world system data and inputs used to develop the M&S?"
+- Show what you found (data/ directory, manifest files, etc.)
+- RECOMMENDATION: Based on evidence found
+- Options: 0 (Not performed), 1 (Informal), 2 (Planned), 3 (Well-defined), 4 (Quantitative) — plus a brief description of what this means for their project
+
+---
+
+**Factor 2: Verification**
+Evidence from M&S 15, 16: Number of test files, test coverage, domain-of-verification docs.
+
+Use AskUserQuestion:
+- "Factor 2: Verification — How rigorously has the M&S been verified (unit tests, integration tests, code comparisons)?"
+- Show test file count and any verification records found
+- RECOMMENDATION: Based on test file count and documentation
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 3: Validation**
+Evidence from M&S 17, 18, 19: Validation datasets, comparison scripts, validation domain docs.
+
+Use AskUserQuestion:
+- "Factor 3: Validation — How well has the M&S been validated against real-world data or higher-fidelity referents?"
+- Show validation artifacts found
+- RECOMMENDATION: Based on evidence
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 4: Development Technical Review**
+Evidence from M&S 9: Review records found.
+
+Use AskUserQuestion:
+- "Factor 4: Development Technical Review — How formally has the M&S been reviewed by qualified independent reviewers during development?"
+- Show review records found (or none)
+- RECOMMENDATION: Based on evidence
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 5: Development Process/Product Management**
+Evidence from M&S 40–51: Life cycle plan, acceptance criteria, defect tracking, versioning.
+
+Use AskUserQuestion:
+- "Factor 5: Development Process/Product Management — How well managed is the M&S development process (life cycle plan, configuration management, issue tracking)?"
+- Show management artifacts found
+- RECOMMENDATION: Based on evidence
+- Options: 0–4 (with descriptions)
+
+---
+
+## Step 4: Score Results Assessment Factors (6–11)
+
+These apply to a specific USE of the M&S, not the M&S itself.
+
+Use AskUserQuestion (one question for context):
+- "The next 6 factors assess a specific use of this M&S. Describe the specific decision or analysis this M&S is supporting right now (or the most recent use)."
+- This description will be embedded in the generated assessment document.
+
+---
+
+**Factor 6: Use Assessment**
+Evidence from M&S 22, 23: Use records, appropriateness assessment.
+
+Use AskUserQuestion:
+- "Factor 6: Use Assessment — How well documented and assessed is the appropriateness of this specific use?"
+- RECOMMENDATION: Based on evidence from M&S 22/23 check
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 7: Input Pedigree**
+Evidence from M&S 24: Input config files, provenance documentation.
+
+Use AskUserQuestion:
+- "Factor 7: Input Pedigree — How well documented are the inputs to this specific run (source, uncertainty, date)?"
+- RECOMMENDATION: Based on config files and input records found
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 8: Uncertainty Characterization**
+Evidence from M&S 28, 29: UQ method docs, uncertainty outputs.
+
+Use AskUserQuestion:
+- "Factor 8: Uncertainty Characterization — How rigorously are input and output uncertainties quantified for this use?"
+- RECOMMENDATION: Based on UQ evidence found
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 9: Results Robustness**
+Evidence from M&S 30: Sensitivity analysis, parameter studies.
+
+Use AskUserQuestion:
+- "Factor 9: Results Robustness — How extensively have the results been tested for sensitivity to inputs and assumptions?"
+- RECOMMENDATION: Based on sensitivity analysis evidence
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 10: Use/Analysis Technical Review**
+Use AskUserQuestion:
+- "Factor 10: Use/Analysis Technical Review — Has this specific use and its results been reviewed by qualified independent reviewers?"
+- Options: 0–4 (with descriptions)
+
+---
+
+**Factor 11: Use Process/Product Management**
+Evidence from M&S 25, 49: Run records, risk assessment.
+
+Use AskUserQuestion:
+- "Factor 11: Use Process/Product Management — How well managed is this specific use (run records, risk assessment, execution rationale)?"
+- RECOMMENDATION: Based on use records found
+- Options: 0–4 (with descriptions)
+
+---
+
+## Step 5: Generate and Display the Assessment
+
+Create `docs/MS_CREDIBILITY_ASSESSMENT.md` with:
+
+```markdown
+# M&S Credibility Assessment
+## Project: [name]
+## Date: [today]
+## Assessed by: [user / Claude]
+
+## Capability Assessment (Developer Factors)
+
+| Factor | Description                            | Score (0–4) | Threshold | Status |
+|--------|----------------------------------------|-------------|-----------|--------|
+| 1      | Data Pedigree                          | X           | [threshold]| ✓/✗/⚠ |
+| 2      | Verification                           | X           | [threshold]| ✓/✗/⚠ |
+| 3      | Validation                             | X           | [threshold]| ✓/✗/⚠ |
+| 4      | Development Technical Review           | X           | [threshold]| ✓/✗/⚠ |
+| 5      | Development Process/Product Mgmt       | X           | [threshold]| ✓/✗/⚠ |
+
+**Capability Score: [average or composite] / 4**
+
+## Results Assessment (User Factors)
+
+| Factor | Description                            | Score (0–4) | Threshold | Status |
+|--------|----------------------------------------|-------------|-----------|--------|
+| 6      | Use Assessment                         | X           | [threshold]| ✓/✗/⚠ |
+| 7      | Input Pedigree                         | X           | [threshold]| ✓/✗/⚠ |
+| 8      | Uncertainty Characterization           | X           | [threshold]| ✓/✗/⚠ |
+| 9      | Results Robustness                     | X           | [threshold]| ✓/✗/⚠ |
+| 10     | Use/Analysis Technical Review          | X           | [threshold]| ✓/✗/⚠ |
+| 11     | Use Process/Product Management         | X           | [threshold]| ✓/✗/⚠ |
+
+**Results Score: [average or composite] / 4**
+
+## Gap Analysis
+
+[For each factor below threshold:]
+- Factor N ([name]): Score X, Threshold Y. Gap: [description of what's needed to close the gap]
+
+## Improvement Roadmap
+
+[Prioritized list of actions to raise each below-threshold factor]
+```
+
+---
+
+## Step 6: Summary
+
+Output a brief summary:
+
+```
+## Credibility Assessment Complete
+
+Capability Assessment: X.X/4 (N/5 factors at or above threshold)
+Results Assessment: X.X/4 (N/6 factors at or above threshold)
+
+Gaps requiring action: [list]
+
+Assessment saved to: docs/MS_CREDIBILITY_ASSESSMENT.md
+
+Next steps:
+- Address Factor [N] gaps to meet acceptance thresholds (M&S 43e)
+- Include this assessment in results reports (M&S 50, 35)
+- Rerun /ms-credibility after closing gaps
+```

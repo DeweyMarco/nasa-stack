@@ -1,0 +1,205 @@
+---
+name: ms-programmatics
+version: 1.0.0
+description: |
+  NASA-STD-7009B Section 4.1 compliance check — 8 Programmatics requirements.
+  Checks intended use, criticality, life cycle plan, metrics, acceptance criteria,
+  reporting info, technical reviews, and defect tracking. Generates missing artifacts.
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - AskUserQuestion
+---
+
+{{PREAMBLE}}
+
+# /ms-programmatics: Section 4.1 Programmatics Compliance
+
+You are checking NASA-STD-7009B **Section 4.1 — M&S Programmatics** requirements for this Python M&S project. There are **8 "shall" requirements**. Check each one, report findings, and offer to generate any missing artifacts.
+
+---
+
+## Step 0: Survey the Project
+
+```bash
+ls -la
+find . -name "*.md" -not -path "./.git/*" | sort
+find . -name "*.py" -not -path "./.git/*" | head -20
+```
+
+Note the project name (from README or directory name) and existing documentation structure.
+
+---
+
+## Step 1: M&S 40 — Intended Use Record
+
+*"The M&S developer shall maintain a record of the intended use of the M&S."*
+
+```bash
+# Check for dedicated file
+find . \( -name "MS_INTENDED_USE*" -o -name "INTENDED_USE*" \) -not -path "./.git/*" 2>/dev/null
+
+# Check module-level docstrings
+grep -r "intended use\|intended_use\|this model\|this simulation\|purpose:" \
+  --include="*.py" --include="*.md" -i -l 2>/dev/null | head -10
+
+# Check README for purpose description
+grep -r "purpose\|intended\|designed to\|this tool\|what this" \
+  --include="README*" -i -A 3 2>/dev/null | head -20
+```
+
+**Compliant if:** A dedicated `docs/MS_INTENDED_USE.md` exists, OR the primary module docstring contains a clear statement of intended use (what the model does, what questions it answers, what phenomena it represents).
+
+---
+
+## Step 2: M&S 6 — Criticality Assessment
+
+*"The M&S developer shall maintain a criticality assessment of the M&S."*
+
+```bash
+find . \( -name "MS_CRITICALITY*" -o -name "CRITICALITY*" \) -not -path "./.git/*" 2>/dev/null
+grep -r "criticality\|safety.critical\|decision.*consequence\|mission.*critical" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** `docs/MS_CRITICALITY_ASSESSMENT.md` exists with a completed Appendix D matrix (Decision Consequence × M&S Influence). Run `/ms-criticality` for interactive assessment.
+
+---
+
+## Step 3: M&S 41 — Life Cycle Plan
+
+*"The M&S developer shall maintain an M&S life cycle plan."*
+
+```bash
+find . \( -name "MS_LIFE_CYCLE*" -o -name "LIFE_CYCLE*" \) -not -path "./.git/*" 2>/dev/null
+grep -r "life cycle\|lifecycle\|development plan\|maintenance plan\|versioning strategy" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** A life cycle plan exists describing development, V&V, maintenance, and retirement phases.
+
+---
+
+## Step 4: M&S 42 — Programmatic and Technical Metrics
+
+*"The M&S developer shall record programmatic and technical metrics for each phase of the M&S life cycle."*
+
+```bash
+grep -r "metric\|milestone\|schedule\|deliverable\|status\|progress\|performance measure" \
+  --include="*.md" -i -l 2>/dev/null | head -10
+find . -name "MS_ACCEPTANCE*" -o -name "ACCEPTANCE_CRITERIA*" 2>/dev/null | grep -v .git
+```
+
+**Compliant if:** Metrics are recorded somewhere (life cycle plan, project plan, or acceptance criteria document) with V&V and uncertainty metrics defined.
+
+---
+
+## Step 5: M&S 43 — Acceptance Criteria
+
+*"The M&S developer shall define acceptance criteria for the M&S."*
+
+The standard requires acceptance criteria for **5 categories** (43a–e):
+- 43a: V&V completeness
+- 43b: Uncertainty characterization completeness
+- 43c: Sensitivity analysis completeness
+- 43d: Results assessment completeness
+- 43e: Minimum credibility thresholds (Appendix E scoring)
+
+```bash
+find . \( -name "MS_ACCEPTANCE*" -o -name "ACCEPTANCE_CRITERIA*" \) -not -path "./.git/*" 2>/dev/null
+grep -r "acceptance criteria\|acceptance threshold\|credibility threshold\|minimum.*score" \
+  --include="*.md" -i -A 5 2>/dev/null | head -30
+```
+
+**Compliant if:** All 5 categories (43a–e) have defined thresholds or criteria.
+
+---
+
+## Step 6: M&S 44 — M&S-Unique Reporting Information
+
+*"The M&S developer shall maintain information unique to M&S reporting."*
+
+```bash
+grep -r "V&V\|verification.*validation\|uncertainty.*quantif\|sensitivity analysis\|credibility" \
+  --include="*.md" -i -l 2>/dev/null | head -10
+find . -name "MS_RESULTS_REPORT*" 2>/dev/null | grep -v .git
+```
+
+**Compliant if:** Any results reports include M&S-specific sections (V&V status, uncertainty, credibility assessment). Run `/ms-reporting` for a deep check.
+
+---
+
+## Step 7: M&S 9 — Technical Review Records
+
+*"The M&S developer shall maintain technical review records."*
+
+```bash
+find . \( -name "*review*" -o -name "*REVIEW*" \) -not -path "./.git/*" \
+  -name "*.md" 2>/dev/null | head -10
+grep -r "technical review\|peer review\|review board\|IPR\|CDR\|PDR\|SRR" \
+  --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** Records of one or more technical reviews exist (peer review, design review, IPR, CDR, etc.) with reviewers, date, findings, and disposition.
+
+---
+
+## Step 8: M&S 51 — Defect and Problem Tracking
+
+*"The M&S developer shall track all defects and problems from discovery to closure."*
+
+```bash
+ls CHANGELOG.md HISTORY.md CHANGES.md 2>/dev/null
+grep -r "bug\|defect\|issue\|problem\|fix\|resolved\|closed\|known.*issue" \
+  --include="CHANGELOG*" --include="HISTORY*" --include="*.md" -i -l 2>/dev/null | head -10
+# Check for issue tracker references
+grep -r "github.com.*issue\|jira\|bugzilla\|tracker" --include="*.md" -i -l 2>/dev/null | head -5
+```
+
+**Compliant if:** CHANGELOG.md, HISTORY.md, or issue tracker references exist documenting defects from discovery to resolution.
+
+---
+
+## Step 9: Report and Generate Artifacts
+
+### Compliance Summary
+
+Output:
+
+```
+## Section 4.1 — Programmatics Compliance
+
+| Req  | Requirement                    | Status | Evidence |
+|------|-------------------------------|--------|----------|
+| M&S 40 | Intended use record          | ✓/✗/⚠ | [location] |
+| M&S 6  | Criticality assessment       | ✓/✗/⚠ | [location] |
+| M&S 41 | Life cycle plan              | ✓/✗/⚠ | [location] |
+| M&S 42 | Programmatic/technical metrics | ✓/✗/⚠ | [location] |
+| M&S 43 | Acceptance criteria (a–e)    | ✓/✗/⚠ | [location] |
+| M&S 44 | M&S-unique reporting info    | ✓/✗/⚠ | [location] |
+| M&S 9  | Technical review records     | ✓/✗/⚠ | [location] |
+| M&S 51 | Defect/problem tracking      | ✓/✗/⚠ | [location] |
+
+Score: X/8 (Y%)
+```
+
+### Generate Missing Artifacts
+
+For each ✗ requirement with a generatable artifact, ask the user:
+
+Use AskUserQuestion:
+- List all missing artifacts
+- RECOMMENDATION: Generate all missing artifacts (stubs take 2 minutes to fill in, non-compliance takes hours to explain to reviewers)
+- Options: A) Generate all  B) Select specific  C) Report only
+
+**Available templates to generate:**
+- `docs/MS_INTENDED_USE.md` (M&S 40)
+- `docs/MS_CRITICALITY_ASSESSMENT.md` (M&S 6) — or run `/ms-criticality` for interactive scoring
+- `docs/MS_LIFE_CYCLE_PLAN.md` (M&S 41)
+- `docs/MS_ACCEPTANCE_CRITERIA.md` (M&S 42, 43, 44)
+
+When generating, read the project's README and main Python files to pre-fill as much project-specific information as possible. Do not generate generic placeholders when you can infer actual content from the codebase.

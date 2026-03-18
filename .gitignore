@@ -1,4 +1,7 @@
 .env
+.env.local
+.env.*
+!.env.example
 node_modules/
 browse/dist/
 .gstack/
@@ -7,7 +10,5 @@ browse/dist/
 *.log
 bun.lock
 *.bun-build
-.env
-.env.local
-.env.*
-!.env.example
+.DS_Store
+*.pdf
