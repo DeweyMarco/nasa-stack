@@ -80,3 +80,26 @@ Specific conditions known to produce incorrect results:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | [DATE] | [AUTHOR] | Initial document |
+
+---
+
+## Code Enforcement Guidance (NASA-STD-7009B M&S 13)
+
+Use `raise ValueError` (not `assert`) — Python's `-O` flag disables assertions.
+Avoid `np.clip` / `np.where` for limit enforcement — they silently modify values.
+
+### Recommended pattern
+
+```python
+def _validate_limits(param_name: str, value: float, min_val: float, max_val: float) -> None:
+    """Enforce M&S applicability limits. Raises ValueError if out of range.
+    All limits documented in docs/MS_LIMITS.md per NASA-STD-7009B M&S 13.
+    """
+    if not (min_val <= value <= max_val):
+        raise ValueError(
+            f"{param_name}={value} outside valid range [{min_val}, {max_val}]. "
+            f"See docs/MS_LIMITS.md for applicability domain."
+        )
+```
+
+Call this at the top of each function that takes bounded parameters.

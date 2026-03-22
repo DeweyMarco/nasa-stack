@@ -51,6 +51,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   'ms-development-check':       ['ms-development/**'],
   'ms-development-units':       ['ms-development/**'],
   'ms-development-vv':          ['ms-development/**'],
+  'ms-development-bounds':      ['ms-development/**', 'test/fixtures/sample-ms-project/**'],
   'ms-use-check':               ['ms-use/**'],
   'ms-use-uncertainty':         ['ms-use/**'],
   'ms-reporting-check':         ['ms-reporting/**'],

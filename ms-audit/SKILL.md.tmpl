@@ -147,9 +147,11 @@ find . -name "THEORY*" -o -name "MATH*" -o -name "CONCEPTS*" 2>/dev/null | grep 
 **M&S 13 — M&S Limits**
 ```bash
 find . -name "MS_LIMITS*" -o -name "LIMITS*" 2>/dev/null | grep -v .git
-grep -r "assert\|raise.*ValueError\|valid.*range\|min.*max\|limits\|bound" --include="*.py" -l 2>/dev/null | head -10
+grep -rn "assert\|raise ValueError\|raise RuntimeError\|raise.*Error\|warnings\.warn\|np\.clip\|np\.where" \
+  --include="*.py" 2>/dev/null | head -30
 ```
-✓ if `docs/MS_LIMITS.md` or input bounds are in code + documented. ✗ if absent.
+{{BOUNDS_ENFORCEMENT_GUIDANCE}}
+✓ if `docs/MS_LIMITS.md` exists (no [PLACEHOLDER]) AND HARD enforcement (`raise ValueError`/`raise RuntimeError`) found for documented limits. ⚠ if only SOFT/ASSERT enforcement, or MS_LIMITS.md is a stub. ✗ if no MS_LIMITS.md AND no enforcement anywhere.
 
 **M&S 14 — Permissible Uses**
 ```bash

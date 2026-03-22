@@ -244,14 +244,69 @@ Read the main simulation module(s) and check whether the governing equations are
 
 ```bash
 find . \( -name "MS_LIMITS*" -o -name "LIMITS*" \) -not -path "./.git/*" 2>/dev/null
-# Check for bounds/limit enforcement in code
-grep -rn "assert\|raise ValueError\|raise.*Error\|if.*<.*:\|if.*>.*:\|np.clip\|np.where" \
-  --include="*.py" 2>/dev/null | head -20
+# Check for bounds/limit enforcement in code (all enforcement types)
+grep -rn "assert\|raise ValueError\|raise RuntimeError\|raise.*Error\|warnings\.warn\|np\.clip\|np\.where" \
+  --include="*.py" 2>/dev/null | head -30
 grep -r "valid.*range\|input.*bound\|limit\|maximum\|minimum\|not.*valid.*for" \
   --include="*.py" --include="*.md" -i -l 2>/dev/null | head -10
 ```
 
-**Compliant if:** `docs/MS_LIMITS.md` explicitly states input/output limits and conditions under which the model is NOT valid, AND the code enforces these limits (asserts, raises, or warnings).
+After running bounds/enforcement grep, perform enforcement analysis:
+
+1. Classify each match found:
+   - HARD: `raise ValueError` / `raise RuntimeError` — stops execution. Best.
+   - SOFT: `warnings.warn` — non-fatal, may go unnoticed in automated pipelines.
+   - ASSERT: `assert` — disabled by Python's `-O` flag. Risky for production M&S.
+   - SILENT: `np.clip` / `np.where` — silently modifies values without notifying
+     the caller. Non-compliant with M&S 13 (limit shall be documented AND enforced
+     visibly).
+
+2. For each ASSERT match: read the matching file at the reported line. Output:
+   - The existing assert line (verbatim from the file)
+   - The recommended replacement with the parameter name already substituted:
+     ```python
+     # CURRENT (risky — disabled with python -O):
+     assert velocity >= 0, "velocity must be non-negative"
+     # RECOMMENDED (NASA M&S 13 compliant):
+     if velocity < 0:
+         raise ValueError(
+             f"velocity={velocity} outside valid range [0, ∞). "
+             f"See docs/MS_LIMITS.md for applicability domain."
+         )
+     ```
+
+3. For each SILENT (`np.clip`/`np.where`) match: flag it with:
+   "np.clip silently modifies values — callers receive no warning. Consider
+   raising ValueError before clipping OR issuing warnings.warn after."
+
+4. Cross-reference with MS_LIMITS.md (if it exists):
+   a. Check if MS_LIMITS.md contains [PLACEHOLDER] values — if yes, treat as ⚠
+      not ✓ (stub generated but not filled in).
+   b. Read the parameter names from column 1 of the limits table.
+   c. For each documented parameter, search for its name in the bounds grep hits.
+   d. If a documented parameter has no matching enforcement: flag as "documented
+      but not enforced in code."
+   e. If names don't match between docs and code, explicitly note: "Parameter name
+      mismatch possible — confirm whether [doc_name] corresponds to [code_name]."
+      Do NOT report ✗ on a name mismatch alone.
+
+5. If MS_LIMITS.md is missing OR empty: scan Python files for function signatures
+   and type annotations (`def func(param: float, ...)`) to extract candidate
+   parameter names. Pre-fill the limits table in the generated MS_LIMITS.md with
+   these names and types, leaving Min/Max/Units/Justification blank for the human.
+   Also scan for `.ipynb` files with the same grep patterns.
+
+6. Output the enforcement analysis result explicitly (even on clean pass):
+   - Issues found: "Enforcement analysis: 3 assert-only checks found (see
+     recommended replacements below). 1 documented limit has no code enforcement."
+   - Clean pass: "Enforcement analysis: found N hard enforcement checks
+     (raise ValueError/RuntimeError). All documented limits in MS_LIMITS.md
+     have corresponding code enforcement. No action needed."
+
+**Compliance criteria:**
+- ✓ = `docs/MS_LIMITS.md` exists with no [PLACEHOLDER] values, AND code has HARD enforcement (`raise ValueError`/`raise RuntimeError`) for all documented limits
+- ⚠ = Some limits documented + enforced; OR MS_LIMITS.md is a stub with [PLACEHOLDER]; OR only SOFT/ASSERT enforcement found
+- ✗ = No MS_LIMITS.md AND no bounds enforcement anywhere in code
 
 ---
 
@@ -449,7 +504,14 @@ Output:
 Score: X/15 (Y%)
 ```
 
-### Generate Missing Artifacts
+### Code Actions (developer must write)
+
+For each ✗ or ⚠ requirement where the fix requires changing Python source code, output the specific code the developer needs to write. Do not generate these — they require human judgment:
+- Assert-to-raise upgrades from the enforcement analysis (show exact substitutions)
+- Missing bounds checks for parameters with no enforcement
+- Unit annotation stubs for undocumented parameters
+
+### Generate Artifacts (skill will write)
 
 Use AskUserQuestion:
 - List all ✗ requirements and their corresponding missing artifacts
@@ -458,9 +520,9 @@ Use AskUserQuestion:
 
 **Available artifacts:**
 - `docs/ASSUMPTIONS.md` (M&S 11, 12)
-- `docs/MS_LIMITS.md` (M&S 13)
+- `docs/MS_LIMITS.md` (M&S 13) — pre-fill parameter names from function signatures if missing
 - `docs/PERMISSIBLE_USES.md` (M&S 14)
 - `docs/VALIDATION_REPORT.md` (M&S 17, 18, 19)
 - `docs/MS_CAPABILITY_ASSESSMENT.md` (M&S 48)
 
-When generating artifacts, read the main Python source files to pre-fill project-specific content (actual function names, parameter names, detected units, etc.).
+When generating artifacts, read the main Python source files to pre-fill project-specific content (actual function names, parameter names, detected units, etc.). For MS_LIMITS.md specifically: if MS_LIMITS.md is absent, scan function signatures (`def func(param: float, ...)`) and pre-fill the limits table with detected parameter names and types, leaving Min/Max/Units/Justification blank for the human to complete.

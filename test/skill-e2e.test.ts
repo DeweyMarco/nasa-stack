@@ -2700,6 +2700,84 @@ Output the diagram directly.`,
   }, 180_000);
 });
 
+// --- NASA M&S development bounds enforcement E2E ---
+
+describeIfSelected('NASA ms-development bounds enforcement E2E', ['ms-development-bounds'], () => {
+  let msDevDir: string;
+
+  beforeAll(() => {
+    msDevDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-e2e-ms-dev-bounds-'));
+
+    // Copy the ms-development skill
+    fs.mkdirSync(path.join(msDevDir, 'ms-development'), { recursive: true });
+    fs.copyFileSync(
+      path.join(ROOT, 'ms-development', 'SKILL.md'),
+      path.join(msDevDir, 'ms-development', 'SKILL.md'),
+    );
+
+    // Copy the sample-ms-project fixture (assert-only bounds, no docs/)
+    const fixtureDir = path.join(ROOT, 'test', 'fixtures', 'sample-ms-project');
+    copyDirSync(fixtureDir, path.join(msDevDir, 'sample-ms-project'));
+  });
+
+  afterAll(() => {
+    try { fs.rmSync(msDevDir, { recursive: true, force: true }); } catch {}
+  });
+
+  testIfSelected('ms-development-bounds', async () => {
+    const fixtureProjectDir = path.join(msDevDir, 'sample-ms-project');
+
+    const result = await runSkillTest({
+      prompt: `Read ms-development/SKILL.md for the compliance check workflow.
+
+Run /ms-development on the project in: ${fixtureProjectDir}
+
+Do NOT use AskUserQuestion — skip the artifact generation prompt and just report findings.
+Write your compliance report to ${msDevDir}/ms-development-output.md
+
+Focus on the bounds enforcement analysis (M&S 13). The project has Python files with assert-based bounds checks.`,
+      workingDirectory: msDevDir,
+      maxTurns: 25,
+      timeout: 240_000,
+      testName: 'ms-development-bounds',
+      runId,
+    });
+
+    logCost('/ms-development bounds', result);
+    recordE2E('/ms-development bounds enforcement', 'NASA ms-development bounds enforcement E2E', result, {
+      passed: ['success', 'error_max_turns'].includes(result.exitReason),
+    });
+    expect(['success', 'error_max_turns']).toContain(result.exitReason);
+
+    // Verify the output contains enforcement analysis and specific guidance
+    const outputPath = path.join(msDevDir, 'ms-development-output.md');
+    if (fs.existsSync(outputPath)) {
+      const output = fs.readFileSync(outputPath, 'utf-8').toLowerCase();
+
+      // Should detect assert-only enforcement and recommend raise ValueError
+      const mentionsAssert = output.includes('assert');
+      const mentionsRaiseValueError = output.includes('raise valueerror') || output.includes('raise ValueError'.toLowerCase());
+      const mentionsEnforcementAnalysis = output.includes('enforcement analysis') || output.includes('assert-only') || output.includes('risky');
+      const mentionsAltitudeKm = output.includes('altitude_km') || output.includes('altitude');
+      const mentionsVelocityMs = output.includes('velocity_ms') || output.includes('velocity');
+      const offersToGenerateLimits = output.includes('ms_limits') || output.includes('limits.md') || output.includes('generate');
+
+      console.log(`Mentions assert: ${mentionsAssert}`);
+      console.log(`Mentions raise ValueError: ${mentionsRaiseValueError}`);
+      console.log(`Mentions enforcement analysis: ${mentionsEnforcementAnalysis}`);
+      console.log(`Mentions altitude_km: ${mentionsAltitudeKm}`);
+      console.log(`Mentions velocity_ms: ${mentionsVelocityMs}`);
+      console.log(`Offers to generate MS_LIMITS.md: ${offersToGenerateLimits}`);
+
+      // Core assertions: must detect asserts and recommend raise ValueError
+      expect(mentionsAssert).toBe(true);
+      expect(mentionsRaiseValueError).toBe(true);
+      // Must identify at least one of the fixture's parameter names
+      expect(mentionsAltitudeKm || mentionsVelocityMs).toBe(true);
+    }
+  }, 300_000);
+});
+
 // Module-level afterAll — finalize eval collector after all tests complete
 afterAll(async () => {
   if (evalCollector) {

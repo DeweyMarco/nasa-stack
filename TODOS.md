@@ -482,6 +482,22 @@ Shipped as `/design-consultation` on garrytan/design branch. Renamed from `/setu
 **Priority:** P3
 **Depends on:** Boil the Lake shipped (v0.6.1)
 
+## NASA Skills
+
+### Extend classify+suggest to all high-failure requirements
+
+**What:** Apply the classify+suggest pattern (currently only M&S 13, M&S 25/26) to:
+- M&S 27 (logging — classify bare `print` vs `logging` module vs structured logging)
+- M&S 11 (assumptions format — classify inline comment vs dedicated section vs no documentation)
+- M&S 15 (test quality — classify existence vs meaningful coverage)
+- M&S 46 (units — classify `pint` vs inline comment vs none)
+
+**Why:** Closes the gap between "you're non-compliant" and "here's what to write" for all requirements, not just bounds. The classify+suggest pattern ships in this codebase for M&S 13 and M&S 25/26 — extending it to all high-failure requirements gives every developer a copy-pasteable fix, not just a flag.
+
+**Effort:** M
+**Priority:** P2
+**Depends on:** classify+suggest for M&S 13 + M&S 25/26 (shipped)
+
 ## Completed
 
 ### Phase 1: Foundations (v0.2.0)

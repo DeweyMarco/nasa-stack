@@ -207,6 +207,16 @@ find . \( -name "run_*.py" -o -name "execute_*.py" -o -name "main.py" \) \
 find . -name "*.ipynb" -not -path "./.git/*" 2>/dev/null | head -5
 grep -r "rationale\|reason.*for.*setting\|why.*this.*configuration\|because\|in order to" \
   --include="*.py" --include="*.md" -i -l 2>/dev/null | head -5
+# Check MS_USE_RECORD.md Inputs section for [PLACEHOLDER]
+grep -n "\[PLACEHOLDER\]" docs/MS_USE_RECORD.md 2>/dev/null | head -5
+```
+
+If MS_USE_RECORD.md exists but its "Inputs" section contains [PLACEHOLDER] values, treat as ⚠ (stub generated but not filled in).
+
+If MS_USE_RECORD.md is absent: when generating the stub, scan run scripts and notebooks for config variables and pre-fill the Inputs table with detected parameter names and values. Look for patterns like:
+```bash
+grep -rn "=\s*[0-9]\|config\['\|params\['\|args\." \
+  --include="run_*.py" --include="execute_*.py" --include="main.py" 2>/dev/null | head -20
 ```
 
 **Compliant if:** Run scripts or notebooks include comments or prose explaining why specific parameter values, boundary conditions, or time steps were chosen.
@@ -221,11 +231,81 @@ grep -r "rationale\|reason.*for.*setting\|why.*this.*configuration\|because\|in 
 grep -r "domain.*check\|within.*valid\|outside.*valid\|warning.*beyond\|placard\|extrapolation.*warning" \
   --include="*.py" --include="*.md" -i -l 2>/dev/null | head -5
 # Check for runtime domain checks in code
-grep -rn "if.*outside\|if.*beyond\|warn.*domain\|warn.*range\|UserWarning" \
-  --include="*.py" 2>/dev/null | head -10
+grep -rn "if.*outside\|if.*beyond\|warn.*domain\|warn.*range\|UserWarning\|validate_inputs\|assert\|raise ValueError\|raise RuntimeError\|np\.clip\|warnings\.warn" \
+  --include="*.py" 2>/dev/null | head -20
 ```
 
-**Compliant if:** Code checks input parameters against the V&V domain at runtime and raises warnings when outside, OR run records explicitly confirm the use was within the validated domain.
+After running bounds/enforcement grep, perform enforcement analysis:
+
+1. Classify each match found:
+   - HARD: `raise ValueError` / `raise RuntimeError` — stops execution. Best.
+   - SOFT: `warnings.warn` — non-fatal, may go unnoticed in automated pipelines.
+   - ASSERT: `assert` — disabled by Python's `-O` flag. Risky for production M&S.
+   - SILENT: `np.clip` / `np.where` — silently modifies values without notifying
+     the caller. Non-compliant with M&S 13 (limit shall be documented AND enforced
+     visibly).
+
+2. For each ASSERT match: read the matching file at the reported line. Output:
+   - The existing assert line (verbatim from the file)
+   - The recommended replacement with the parameter name already substituted:
+     ```python
+     # CURRENT (risky — disabled with python -O):
+     assert velocity >= 0, "velocity must be non-negative"
+     # RECOMMENDED (NASA M&S 13 compliant):
+     if velocity < 0:
+         raise ValueError(
+             f"velocity={velocity} outside valid range [0, ∞). "
+             f"See docs/MS_LIMITS.md for applicability domain."
+         )
+     ```
+
+3. For each SILENT (`np.clip`/`np.where`) match: flag it with:
+   "np.clip silently modifies values — callers receive no warning. Consider
+   raising ValueError before clipping OR issuing warnings.warn after."
+
+4. Cross-reference with MS_LIMITS.md (if it exists):
+   a. Check if MS_LIMITS.md contains [PLACEHOLDER] values — if yes, treat as ⚠
+      not ✓ (stub generated but not filled in).
+   b. Read the parameter names from column 1 of the limits table.
+   c. For each documented parameter, search for its name in the bounds grep hits.
+   d. If a documented parameter has no matching enforcement: flag as "documented
+      but not enforced in code."
+   e. If names don't match between docs and code, explicitly note: "Parameter name
+      mismatch possible — confirm whether [doc_name] corresponds to [code_name]."
+      Do NOT report ✗ on a name mismatch alone.
+
+5. If MS_LIMITS.md is missing OR empty: scan Python files for function signatures
+   and type annotations (`def func(param: float, ...)`) to extract candidate
+   parameter names. Pre-fill the limits table in the generated MS_LIMITS.md with
+   these names and types, leaving Min/Max/Units/Justification blank for the human.
+   Also scan for `.ipynb` files with the same grep patterns.
+
+6. Output the enforcement analysis result explicitly (even on clean pass):
+   - Issues found: "Enforcement analysis: 3 assert-only checks found (see
+     recommended replacements below). 1 documented limit has no code enforcement."
+   - Clean pass: "Enforcement analysis: found N hard enforcement checks
+     (raise ValueError/RuntimeError). All documented limits in MS_LIMITS.md
+     have corresponding code enforcement. No action needed."
+
+If no `validate_inputs()` function or guard clause is found before model execution, output this recommended pre-execution validation pattern (adapt parameter names to those detected in the scanned run scripts):
+
+```python
+# RECOMMENDED pre-execution validation pattern (NASA-STD-7009B M&S 26):
+def validate_inputs(params: dict, limits_path: str = "docs/MS_LIMITS.md") -> None:
+    """Verify inputs are within the V&V domain before model execution.
+    Raises ValueError if any parameter is outside its documented valid range.
+    See NASA-STD-7009B M&S 26.
+    """
+    if params["altitude_km"] > 100:
+        raise ValueError(
+            f"altitude_km={params['altitude_km']} exceeds V&V domain (0–100 km). "
+            f"Results beyond this range are extrapolations. See {limits_path}."
+        )
+```
+
+**Compliant if:** Code checks input parameters against the V&V domain at runtime using HARD enforcement (`raise ValueError`/`raise RuntimeError`) and raises errors when outside, OR run records explicitly confirm the use was within the validated domain.
+**Partial if:** Only SOFT (`warnings.warn`) or ASSERT enforcement found, or domain check exists but is incomplete.
+**Non-compliant if:** No domain check at runtime and no run record confirming domain compliance.
 
 ---
 

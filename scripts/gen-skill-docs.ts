@@ -1087,6 +1087,60 @@ Only commit if there are changes. Stage all bootstrap files (config, test direct
 ---`;
 }
 
+function generateBoundsEnforcementGuidance(): string {
+  return `After running bounds/enforcement grep, perform enforcement analysis:
+
+1. Classify each match found:
+   - HARD: \`raise ValueError\` / \`raise RuntimeError\` — stops execution. Best.
+   - SOFT: \`warnings.warn\` — non-fatal, may go unnoticed in automated pipelines.
+   - ASSERT: \`assert\` — disabled by Python's \`-O\` flag. Risky for production M&S.
+   - SILENT: \`np.clip\` / \`np.where\` — silently modifies values without notifying
+     the caller. Non-compliant with M&S 13 (limit shall be documented AND enforced
+     visibly).
+
+2. For each ASSERT match: read the matching file at the reported line. Output:
+   - The existing assert line (verbatim from the file)
+   - The recommended replacement with the parameter name already substituted:
+     \`\`\`python
+     # CURRENT (risky — disabled with python -O):
+     assert velocity >= 0, "velocity must be non-negative"
+     # RECOMMENDED (NASA M&S 13 compliant):
+     if velocity < 0:
+         raise ValueError(
+             f"velocity={velocity} outside valid range [0, ∞). "
+             f"See docs/MS_LIMITS.md for applicability domain."
+         )
+     \`\`\`
+
+3. For each SILENT (\`np.clip\`/\`np.where\`) match: flag it with:
+   "np.clip silently modifies values — callers receive no warning. Consider
+   raising ValueError before clipping OR issuing warnings.warn after."
+
+4. Cross-reference with MS_LIMITS.md (if it exists):
+   a. Check if MS_LIMITS.md contains [PLACEHOLDER] values — if yes, treat as ⚠
+      not ✓ (stub generated but not filled in).
+   b. Read the parameter names from column 1 of the limits table.
+   c. For each documented parameter, search for its name in the bounds grep hits.
+   d. If a documented parameter has no matching enforcement: flag as "documented
+      but not enforced in code."
+   e. If names don't match between docs and code, explicitly note: "Parameter name
+      mismatch possible — confirm whether [doc_name] corresponds to [code_name]."
+      Do NOT report ✗ on a name mismatch alone.
+
+5. If MS_LIMITS.md is missing OR empty: scan Python files for function signatures
+   and type annotations (\`def func(param: float, ...)\`) to extract candidate
+   parameter names. Pre-fill the limits table in the generated MS_LIMITS.md with
+   these names and types, leaving Min/Max/Units/Justification blank for the human.
+   Also scan for \`.ipynb\` files with the same grep patterns.
+
+6. Output the enforcement analysis result explicitly (even on clean pass):
+   - Issues found: "Enforcement analysis: 3 assert-only checks found (see
+     recommended replacements below). 1 documented limit has no code enforcement."
+   - Clean pass: "Enforcement analysis: found N hard enforcement checks
+     (raise ValueError/RuntimeError). All documented limits in MS_LIMITS.md
+     have corresponding code enforcement. No action needed."`;
+}
+
 const RESOLVERS: Record<string, () => string> = {
   COMMAND_REFERENCE: generateCommandReference,
   SNAPSHOT_FLAGS: generateSnapshotFlags,
@@ -1098,6 +1152,7 @@ const RESOLVERS: Record<string, () => string> = {
   DESIGN_REVIEW_LITE: generateDesignReviewLite,
   REVIEW_DASHBOARD: generateReviewDashboard,
   TEST_BOOTSTRAP: generateTestBootstrap,
+  BOUNDS_ENFORCEMENT_GUIDANCE: generateBoundsEnforcementGuidance,
 };
 
 // ─── Template Processing ────────────────────────────────────
